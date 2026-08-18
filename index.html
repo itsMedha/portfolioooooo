@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Medha — Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ============ DESKTOP / HOMEPAGE ============ -->
+<main id="desktop" class="view view--desktop is-active" aria-label="Desktop home">
+
+  <header class="titlebar">
+    <h1 class="titlebar__text">Hi! I'm Medha</h1>
+  </header>
+
+  <div class="desktop__stage">
+
+    <!-- LEFT FOLDER COLUMN -->
+    <nav class="folder-col folder-col--left" aria-label="Projects">
+      <button class="folder" data-target="project1" data-side="left">
+        <span class="folder__art" aria-hidden="true">
+          <img class="folder__img folder__img--idle" src="assets/folder1.png" alt="" />
+          <img class="folder__img folder__img--hover" src="assets/folder2.png" alt="" />
+        </span>
+        <span class="folder__label">Project1</span>
+      </button>
+
+      <button class="folder" data-target="project2" data-side="left">
+        <span class="folder__art" aria-hidden="true">
+          <img class="folder__img folder__img--idle" src="assets/folder1.png" alt="" />
+          <img class="folder__img folder__img--hover" src="assets/folder2.png" alt="" />
+        </span>
+        <span class="folder__label">Project2</span>
+      </button>
+
+      <button class="folder" data-target="project3" data-side="left">
+        <span class="folder__art" aria-hidden="true">
+          <img class="folder__img folder__img--idle" src="assets/folder1.png" alt="" />
+          <img class="folder__img folder__img--hover" src="assets/folder2.png" alt="" />
+        </span>
+        <span class="folder__label">Project3</span>
+      </button>
+    </nav>
+
+    <!-- CHARACTER -->
+    <div class="character" aria-hidden="true">
+      <img class="character__img character__img--center is-active" src="assets/char1.png" alt="" />
+      <img class="character__img character__img--left" src="assets/char2.png" alt="" />
+      <img class="character__img character__img--right" src="assets/char3.png" alt="" />
+    </div>
+
+    <!-- RIGHT FOLDER COLUMN -->
+    <nav class="folder-col folder-col--right" aria-label="More sections">
+      <button class="folder" data-target="skills" data-side="right">
+        <span class="folder__art" aria-hidden="true">
+          <img class="folder__img folder__img--idle" src="assets/folder1.png" alt="" />
+          <img class="folder__img folder__img--hover" src="assets/folder2.png" alt="" />
+        </span>
+        <span class="folder__label">Skills</span>
+      </button>
+
+      <button class="folder" data-target="experience" data-side="right">
+        <span class="folder__art" aria-hidden="true">
+          <img class="folder__img folder__img--idle" src="assets/folder1.png" alt="" />
+          <img class="folder__img folder__img--hover" src="assets/folder2.png" alt="" />
+        </span>
+        <span class="folder__label">Experience/<br/>Education</span>
+      </button>
+
+      <button class="folder" data-target="sidequests" data-side="right">
+        <span class="folder__art" aria-hidden="true">
+          <img class="folder__img folder__img--idle" src="assets/folder1.png" alt="" />
+          <img class="folder__img folder__img--hover" src="assets/folder2.png" alt="" />
+        </span>
+        <span class="folder__label">Side Quests</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <p class="hint">click a folder to open it</p>
+</main>
+
+<!-- ============ INNER PAGES ============ -->
+<!-- Content is rendered entirely by script.js from the DATA object at the top of the file -->
+<div id="page-root" class="view view--page"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
