@@ -513,6 +513,11 @@
       "</p>" +
       yearbookLink +
       "</section>" +
+      '<section class="card"><h3>The Ducks</h3><p class="placeholder">' +
+      esc(d.ducks.desc) +
+      "</p>" +
+      duckLink +
+      "</section>" +
       "</div>" +
       "</article>"
     );
