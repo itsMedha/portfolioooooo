@@ -12,23 +12,35 @@
       title: "User Sync - Distributed Directory Synchronization",
       timeframe: "Nov 2024 – May 2025",
       overview:
-        "A distributed backend service that synchronizes enterprise user data from external directory providers into ZL Technologies' enterprise data management platform, handling around 10,000 user updates per run.",
+        "A Java backend service responsible for synchronizing enterprise users from external directory providers such as Microsoft 365 and Google Directory into the platform using Microsoft Graph APIs, handling large-scale enterprise user synchronization.",
       problem:
-        "Directory sync jobs ran sequentially and could take a long time to complete. Long-running background jobs had no resilience to transient failures, and partial failures were hard to diagnose or safely re-run.",
-      solution:
-        "Redesigned the sync pipeline to run in parallel using thread pools and concurrent processing. Added idempotency checks, automatic retries, and structured logging so failures could be traced and safely re-run without duplicating work.",
+        "The synchronization process was sequential, with mail server agents being processed one by one, making large enterprise syncs slow.\n\nDuring optimization, I also identified additional performance bottlenecks around memory usage, API pagination, and excessive logging.",
+      solution: {
+        intro:
+          "Traced the synchronization flow and redesigned the processing to improve throughput and scalability.",
+        bullets: [
+          "Replaced sequential agent processing with bounded parallel execution using a 3-thread pool through the existing Parallel Runner.",
+          "While testing the parallel implementation, identified a Java Heap OutOfMemoryError for large user datasets.",
+          "Investigated the memory issue and found that the system was materializing the entire List<User> in memory before processing.",
+          "Refactored the processing model to use lazy, paginated iteration, allowing users to be processed in batches instead of accumulating the complete dataset in memory.",
+          "Optimized Microsoft Graph API pagination by increasing the fetch size from the default 100 to 999 users per request, reducing network round trips.",
+          "Reduced unnecessary logging by moving high-volume request and user-object logs to DEBUG, lowering logging I/O overhead.",
+        ],
+      },
       contribution:
-        "Designed and implemented the parallelized sync architecture end-to-end, including the retry and idempotency layer for long-running jobs.",
+        "Worked hands-on with the existing Java backend to trace execution flow, debug performance issues, identify bottlenecks and implement targeted optimizations.\n\nI analyzed the flow from the synchronization trigger through mail server agents → external directory APIs → temporary Lucene index → change processing → database, gaining a deeper understanding of the existing codebase and its design patterns.",
       tech: [
         "Java",
         "Multithreading",
-        "Distributed Systems",
-        "SQL",
         "Thread Pools",
+        "Concurrency",
+        "Microsoft Graph APIs",
+        "REST APIs",
+        "SQL",
         "Structured Logging",
       ],
       outcome:
-        "Reduced end-to-end sync time by 45% and significantly improved the robustness of long-running background jobs.",
+        "Reduced synchronization bottlenecks by approximately 40–50% by combining bounded parallel processing, memory-efficient user processing, API pagination optimization and reduced logging overhead.\n\nThe optimization also eliminated the large in-memory accumulation that was causing Heap OOM issues for large enterprise datasets.",
       links: [],
     },
 
@@ -308,6 +320,29 @@
       "</ul>"
     );
   }
+  function paragraphs(text) {
+    return text
+      .split(/\n\s*\n/)
+      .map(function (p) {
+        return '<p class="placeholder">' + esc(p) + "</p>";
+      })
+      .join("");
+  }
+  function bulletList(items) {
+    return (
+      '<ul class="role-bullets">' +
+      items
+        .map(function (i) {
+          return "<li>" + esc(i) + "</li>";
+        })
+        .join("") +
+      "</ul>"
+    );
+  }
+  function solutionHtml(solution) {
+    if (typeof solution === "string") return paragraphs(solution);
+    return paragraphs(solution.intro) + bulletList(solution.bullets);
+  }
   function backBtn() {
     return '<button class="back-btn" data-back><span class="back-btn__icon">←</span> back to desktop</button>';
   }
@@ -341,7 +376,9 @@
               );
             })
             .join("")
-        : '<p class="placeholder">Internal enterprise project - code and live demo are confidential.</p>';
+        : '<p class="placeholder">Internal enterprise project — source code and live demo are confidential.</p>';
+
+    var solutionWide = typeof d.solution === "object" ? " card--wide" : "";
 
     return (
       '<article class="page page--project">' +
@@ -351,24 +388,26 @@
       esc(d.timeframe) +
       "</p>" +
       '<div class="page__grid">' +
-      '<section class="card"><h3>Overview</h3><p class="placeholder">' +
-      esc(d.overview) +
-      "</p></section>" +
-      '<section class="card"><h3>Problem</h3><p class="placeholder">' +
-      esc(d.problem) +
-      "</p></section>" +
-      '<section class="card"><h3>Solution</h3><p class="placeholder">' +
-      esc(d.solution) +
-      "</p></section>" +
-      '<section class="card"><h3>My Contribution</h3><p class="placeholder">' +
-      esc(d.contribution) +
-      "</p></section>" +
+      '<section class="card"><h3>Overview</h3>' +
+      paragraphs(d.overview) +
+      "</section>" +
+      '<section class="card"><h3>Problem</h3>' +
+      paragraphs(d.problem) +
+      "</section>" +
+      '<section class="card' +
+      solutionWide +
+      '"><h3>Solution</h3>' +
+      solutionHtml(d.solution) +
+      "</section>" +
+      '<section class="card"><h3>My Contribution</h3>' +
+      paragraphs(d.contribution) +
+      "</section>" +
       '<section class="card card--wide"><h3>Technologies / Tools</h3>' +
       tagList(d.tech) +
       "</section>" +
-      '<section class="card"><h3>Outcome / Results</h3><p class="placeholder">' +
-      esc(d.outcome) +
-      "</p></section>" +
+      '<section class="card"><h3>Outcome / Results</h3>' +
+      paragraphs(d.outcome) +
+      "</section>" +
       '<section class="card"><h3>Links</h3>' +
       linksHtml +
       "</section>" +
