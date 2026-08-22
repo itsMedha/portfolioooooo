@@ -64,9 +64,16 @@ a, button {
   height: 100vh;
   height: 100dvh;
   background: url("assets/background.jpg") center center / cover no-repeat;
-  display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* .view.is-active sets display:block and outranks .view--desktop's own
+   display:flex on specificity alone, so it must be re-asserted here at
+   matching specificity to actually get the flex column (and with it,
+   the equal space above/below the centered stage). */
+.view--desktop.is-active {
+  display: flex;
 }
 
 .titlebar {
@@ -93,7 +100,7 @@ a, button {
   align-items: center;
   justify-content: center;
   gap: clamp(28px, 6vw, 110px);
-  padding: clamp(28px, 8vh, 90px) clamp(12px, 3vw, 48px) 2vh;
+  padding: clamp(16px, 4vh, 60px) clamp(12px, 3vw, 48px);
   min-height: 0;
 }
 
@@ -255,6 +262,51 @@ a, button {
     font-size: 9px;
     padding: 3px 7px;
   }
+}
+
+/* ---------- Mobile portrait: stacked layout ----------
+   header -> character -> row(project1-3) -> row(skills/experience/sidequests)
+   Sized in vh so the whole stage always fits one phone screen, no scroll. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .titlebar {
+    padding: clamp(6px, 1.4vh, 14px) 12px;
+  }
+  .titlebar__text {
+    font-size: clamp(17px, 5.5vw, 24px);
+  }
+
+  .desktop__stage {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(10px, 2.2vh, 22px);
+    padding: 1vh 10px;
+  }
+
+  .character {
+    order: 1;
+    width: clamp(110px, 30vh, 200px);
+  }
+
+  .folder-col--left,
+  .folder-col--right {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: clamp(10px, 4vw, 24px);
+  }
+  .folder-col--left { order: 2; }
+  .folder-col--right { order: 3; }
+
+  .folder__art { width: clamp(52px, 9vh, 82px); }
+  .folder__label {
+    font-size: 8.5px;
+    white-space: normal;
+    max-width: 78px;
+    padding: 2px 6px;
+  }
+
+  .hint { display: none; }
 }
 
 /* ============================================================
