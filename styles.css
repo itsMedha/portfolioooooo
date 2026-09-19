@@ -162,6 +162,24 @@ a, button {
 .folder:hover .folder__img--hover,
 .folder:focus-visible .folder__img--hover { opacity: 1; }
 
+/* ---------- Phones: no hover state ----------
+   Touch phones (portrait or landscape) skip the hover preview so a single
+   tap opens the folder straight away. Desktop, monitor and iPad keep it. */
+@media (pointer: coarse) and (max-width: 600px),
+       (pointer: coarse) and (max-height: 480px) {
+  .folder:hover,
+  .folder:focus-visible {
+    transform: translateY(0) scale(1);
+  }
+  .folder:active {
+    transform: translateY(-1px) scale(0.98);
+  }
+  .folder:hover .folder__img--idle,
+  .folder:focus-visible .folder__img--idle { opacity: 1; }
+  .folder:hover .folder__img--hover,
+  .folder:focus-visible .folder__img--hover { opacity: 0; }
+}
+
 .folder__label {
   font-family: var(--font-mono);
   font-size: clamp(11px, 1.1vw, 15px);
