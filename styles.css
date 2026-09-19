@@ -646,9 +646,27 @@ a, button {
 .fullpage {
   min-height: 100%;
   background: var(--titlebar-bg);
-  padding: clamp(18px, 4vh, 48px) clamp(14px, 5vw, 72px) clamp(28px, 6vh, 72px);
 }
-.fullpage .page { max-width: 1240px; }
+.fullpage__inner {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+/* Sticky header: the back button stays in view while the page scrolls */
+.fullpage__bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 12px clamp(14px, 5vw, 72px) 14px;
+  background: var(--titlebar-bg);
+  border-bottom: 1.5px solid var(--card-border);
+  box-shadow: 0 4px 14px rgba(20, 20, 30, 0.06);
+}
+.fullpage__bar .back-btn { margin-bottom: 0; }
+
+.fullpage__body {
+  padding: clamp(20px, 4vh, 36px) clamp(14px, 5vw, 72px) clamp(28px, 6vh, 72px);
+}
 
 .flow-figure {
   margin: 0 0 18px;

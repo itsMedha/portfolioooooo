@@ -446,7 +446,7 @@
 
     return (
       '<article class="page page--project">' +
-      backBtn() +
+      (d.fullPage ? "" : backBtn()) +
       pageHead(d.eyebrow, d.title) +
       '<p class="page__timeframe">' +
       esc(d.timeframe) +
@@ -639,8 +639,12 @@
       ? '<div class="fullpage" role="region" aria-label="' +
         label +
         '">' +
+        '<div class="fullpage__bar"><div class="fullpage__inner">' +
+        backBtn() +
+        "</div></div>" +
+        '<div class="fullpage__body"><div class="fullpage__inner">' +
         renderer(def) +
-        "</div>"
+        "</div></div></div>"
       : '<div class="modal-backdrop" data-modal-backdrop>' +
         '<div class="modal-dialog" role="dialog" aria-modal="true" aria-label="' +
         label +
