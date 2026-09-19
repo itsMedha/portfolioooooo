@@ -8,6 +8,11 @@
   var DATA = {
     project1: {
       kind: "project",
+      fullPage: true,
+      flowImage: {
+        src: "assets/filespace-flow.webp",
+        alt: "Diagram of the workflow consolidation: the separate Workspace Main and Raw Data screens, with their problems, merge into one unified workspace covering search, filter and sort, results, double-click to view content, and preserve or export. About 60% fewer clicks in the core search to export journey.",
+      },
       eyebrow: "WORKFLOW CONSOLIDATION",
       title: "FileSpace — Unified Workspace, Raw Data & Export UI",
       timeframe: "2026",
@@ -386,6 +391,59 @@
     var solutionWide = typeof d.solution === "object" ? " card--wide" : "";
     var contributionWide = d.contributionWide ? " card--wide" : "";
 
+    var flowHtml = d.flowImage
+      ? '<figure class="flow-figure">' +
+        '<a class="flow-figure__link" href="' +
+        esc(d.flowImage.src) +
+        '" target="_blank" rel="noopener">' +
+        '<img src="' +
+        esc(d.flowImage.src) +
+        '" alt="' +
+        esc(d.flowImage.alt) +
+        '" /></a></figure>'
+      : "";
+
+    var cards = {
+      overview:
+        '<section class="card"><h3>Overview</h3>' +
+        paragraphs(d.overview) +
+        "</section>",
+      problem:
+        '<section class="card"><h3>Problem</h3>' +
+        paragraphs(d.problem) +
+        "</section>",
+      solution:
+        '<section class="card' +
+        solutionWide +
+        '"><h3>Solution</h3>' +
+        solutionHtml(d.solution) +
+        "</section>",
+      contribution:
+        '<section class="card' +
+        contributionWide +
+        '"><h3>My Contribution</h3>' +
+        paragraphs(d.contribution) +
+        "</section>",
+      tech:
+        '<section class="card card--wide"><h3>Technologies / Tools</h3>' +
+        tagList(d.tech) +
+        "</section>",
+      outcome:
+        '<section class="card"><h3>Outcome / Results</h3>' +
+        paragraphs(d.outcome) +
+        "</section>",
+      links:
+        '<section class="card"><h3>Links</h3>' +
+        linksHtml +
+        "</section>",
+    };
+
+    /* Projects with a flow graphic lead with it, then Technologies, then the
+       usual cards; every other project keeps the original order. */
+    var order = d.flowImage
+      ? ["tech", "overview", "problem", "solution", "contribution", "outcome", "links"]
+      : ["overview", "problem", "solution", "contribution", "tech", "outcome", "links"];
+
     return (
       '<article class="page page--project">' +
       backBtn() +
@@ -394,32 +452,13 @@
       esc(d.timeframe) +
       "</p>" +
       (d.note ? '<p class="project-note">' + esc(d.note) + "</p>" : "") +
+      flowHtml +
       '<div class="page__grid">' +
-      '<section class="card"><h3>Overview</h3>' +
-      paragraphs(d.overview) +
-      "</section>" +
-      '<section class="card"><h3>Problem</h3>' +
-      paragraphs(d.problem) +
-      "</section>" +
-      '<section class="card' +
-      solutionWide +
-      '"><h3>Solution</h3>' +
-      solutionHtml(d.solution) +
-      "</section>" +
-      '<section class="card' +
-      contributionWide +
-      '"><h3>My Contribution</h3>' +
-      paragraphs(d.contribution) +
-      "</section>" +
-      '<section class="card card--wide"><h3>Technologies / Tools</h3>' +
-      tagList(d.tech) +
-      "</section>" +
-      '<section class="card"><h3>Outcome / Results</h3>' +
-      paragraphs(d.outcome) +
-      "</section>" +
-      '<section class="card"><h3>Links</h3>' +
-      linksHtml +
-      "</section>" +
+      order
+        .map(function (key) {
+          return cards[key];
+        })
+        .join("") +
       "</div></article>"
     );
   }
@@ -595,13 +634,19 @@
     var renderer = def && RENDERERS[def.kind];
     if (!renderer) return;
 
-    pageRoot.innerHTML =
-      '<div class="modal-backdrop" data-modal-backdrop>' +
-      '<div class="modal-dialog" role="dialog" aria-modal="true" aria-label="' +
-      esc(def.title || id) +
-      '">' +
-      renderer(def) +
-      "</div></div>";
+    var label = esc(def.title || id);
+    pageRoot.innerHTML = def.fullPage
+      ? '<div class="fullpage" role="region" aria-label="' +
+        label +
+        '">' +
+        renderer(def) +
+        "</div>"
+      : '<div class="modal-backdrop" data-modal-backdrop>' +
+        '<div class="modal-dialog" role="dialog" aria-modal="true" aria-label="' +
+        label +
+        '">' +
+        renderer(def) +
+        "</div></div>";
 
     pageRoot.classList.add("is-active");
     document.body.classList.add("is-page-open");
