@@ -8,93 +8,108 @@
   var DATA = {
     project1: {
       kind: "project",
-      eyebrow: "BACKEND PROJECT",
-      title: "User Sync - Distributed Directory Synchronization",
-      timeframe: "Nov 2024 – May 2025",
+      eyebrow: "WORKFLOW CONSOLIDATION",
+      title: "FileSpace — Unified Workspace, Raw Data & Export UI",
+      timeframe: "2026",
       overview:
-        "A Java backend service responsible for synchronizing enterprise users from external directory providers such as Microsoft 365 and Google Directory into the platform using Microsoft Graph APIs, handling large-scale enterprise user synchronization.",
+        "A unified FileSpace workspace for an enterprise analytics platform, merging previously separate Workspace Main and Raw Data screens into one search → preview → export journey with backend-driven configurable exports.",
       problem:
-        "The synchronization process was sequential, with mail server agents being processed one by one, making large enterprise syncs slow.\n\nDuring optimization, I also identified additional performance bottlenecks around memory usage, API pagination, and excessive logging.",
-      solution: {
-        intro:
-          "Traced the synchronization flow and redesigned the processing to improve throughput and scalability.",
-        bullets: [
-          "Replaced sequential agent processing with bounded parallel execution using a 3-thread pool through the existing Parallel Runner.",
-          "While testing the parallel implementation, identified a Java Heap OutOfMemoryError for large user datasets.",
-          "Investigated the memory issue and found that the system was materializing the entire List<User> in memory before processing.",
-          "Refactored the processing model to use lazy, paginated iteration, allowing users to be processed in batches instead of accumulating the complete dataset in memory.",
-          "Optimized Microsoft Graph API pagination by increasing the fetch size from the default 100 to 999 users per request, reducing network round trips.",
-          "Reduced unnecessary logging by moving high-volume request and user-object logs to DEBUG, lowering logging I/O overhead.",
-        ],
-      },
+        "Search, filtering, raw-data browsing, file/mail preview and export lived on disconnected screens, forcing users to navigate away and lose search context. Export columns were hardcoded, so users couldn't control what a raw-data export contained.",
+      solution:
+        "Restructured the information architecture in Figma first, then built the consolidated experience in React/TypeScript: a unified search-preview toolbar, contextual filters, file/mail detail cards, and a virtualized Material React Table with server-side search, sort, filter and pagination. Export fields are now fetched from the API, searchable, and selectable per export.",
       contribution:
-        "Worked hands-on with the existing Java backend to trace execution flow, debug performance issues, identify bottlenecks and implement targeted optimizations.\n\nI analyzed the flow from the synchronization trigger through mail server agents → external directory APIs → temporary Lucene index → change processing → database, gaining a deeper understanding of the existing codebase and its design patterns.",
+        "Designed the consolidated workflow in Figma and implemented it end to end — the configurable export-fields feature (dynamic field discovery, searchable checkbox selection, localized labels, file vs mail and JSON/Parquet handling), the FileDetailsOnlyCard / MailDetailsOnlyCard preview flows with sanitized HTML rendering, and the state architecture split across Redux, Formik, React Hook Form, React Query and local state. Kept every existing consumer, permission and feature flag working while integrating with legacy JavaScript/AJAX infrastructure.",
       tech: [
-        "Java",
-        "Multithreading",
-        "Thread Pools",
-        "Concurrency",
-        "Microsoft Graph APIs",
+        "React",
+        "TypeScript",
+        "JavaScript",
+        "Redux",
+        "TanStack Query",
+        "Formik",
+        "Yup",
+        "React Hook Form",
+        "Material UI",
+        "Material React Table",
         "REST APIs",
-        "SQL",
-        "Structured Logging",
+        "AJAX",
+        "CSS Modules",
+        "Figma",
       ],
       outcome:
-        "Reduced synchronization bottlenecks by approximately 40–50% by combining bounded parallel processing, memory-efficient user processing, API pagination optimization and reduced logging overhead.\n\nThe optimization also eliminated the large in-memory accumulation that was causing Heap OOM issues for large enterprise datasets.",
+        "Reduced clicks in the core search-to-export path by ~60% by consolidating search, filtering, preview and export into a single screen, and cut refresh time by removing the full-page reloads the old multi-screen flow required. Exports became user-configurable instead of fixed-column, with the consolidated experience validated through integration and regression testing across search, filtering, preview, selection, export and export-history flows.",
       links: [],
     },
 
     project2: {
       kind: "project",
-      eyebrow: "DATA-INTENSIVE UI",
-      title: "Record Category Management - Hierarchical Data UI",
-      timeframe: "Sept 2024 – Dec 2024",
+      eyebrow: "FULL-STACK MONOREPO",
+      title: "BookRush - Book Discovery, Delivery & Reader Community Platform",
+      timeframe: "2026 · Personal project",
       overview:
-        "An interactive hierarchical category tree for an enterprise records-management admin panel, letting admins organize deeply nested record categories in real time.",
+        "A book discovery, quick-commerce delivery, and reader-community platform built as a production-shaped monorepo: a NestJS + Prisma API, a Vite/React web app, and a React Native/Expo mobile app, all sharing one real-time order-tracking architecture and one set of domain types.\n\nThe core loop is Discover → Read → Connect: find a book through search or personalized recommendations, get it delivered instantly from a nearby fulfillment center (or via standard shipping), then discuss it with other readers through posts, reviews, and book clubs.",
       problem:
-        "Admins needed to create, edit, reorder, and delete deeply nested categories without losing context or triggering full page reloads, while keeping the UI in sync with the backend at all times.",
-      solution:
-        "Built the tree interface with jsTree on top of Ext JS, wired to REST APIs via AJAX for create, edit, select, and delete actions, with dynamic forms bound to whichever node was selected and validated before submission.",
+        "The goal was to build something that feels like an actual consumer app for book lovers - editorial, warm, commerce-capable - rather than a generated CRUD demo, while keeping three separate clients (web, mobile, and future integrations) consistent against one backend.\n\nThat meant getting commerce logic (pricing, delivery eligibility, stock) fully server-authoritative, keeping order status genuinely real-time across clients, and sharing domain types and validation rules across the whole monorepo instead of duplicating them per app.",
+      solution: {
+        intro:
+          "Structured the codebase as an npm workspaces monorepo with shared packages for domain types and zod validation, then built the backend and both clients on top of that shared contract.",
+        bullets: [
+          "Built the NestJS + Prisma API with feature modules (auth, books, cart, orders, realtime, community, clubs) so pricing, delivery eligibility, and stock decrements all live in unit-tested backend services - never trusted from the client.",
+          "Implemented a quick-commerce delivery simulator: real inventory-per-fulfillment-center data plus haversine distance decides INSTANT vs. STANDARD vs. UNAVAILABLE per book, per location.",
+          "Added live order tracking over a Socket.IO /orders namespace, with an in-process simulator pushing an order through CONFIRMED → PREPARING → PACKED → PICKED UP → OUT FOR DELIVERY → DELIVERED to subscribed clients.",
+          "Implemented JWT auth with access/refresh rotation and argon2 password hashing, shared identically across the web and mobile clients.",
+          "Built the community layer (posts, likes, comments, follows, For You/Following/Trending feeds) and book clubs (join/leave, current book, discussions) on the same API.",
+          "Used TanStack Query + Zustand on both web and mobile for server/client state, with FlashList and MMKV on the mobile side for large lists and fast persisted storage.",
+        ],
+      },
       contribution:
-        "Engineered the tree UI and its state handling, built the create/edit forms with validation, and optimized re-render cycles for large trees.",
+        "Designed and built the project end-to-end across all three apps: the NestJS/Prisma backend, the Vite/React web client, and the React Native/Expo mobile client, plus the shared-types and validation packages that keep them in sync.\n\nWrote the backend unit tests (pricing, geo distance, delivery availability, full auth lifecycle) and set up per-app, path-filtered CI on GitHub Actions.",
+      contributionWide: true,
       tech: [
-        "JavaScript",
-        "Ext JS",
-        "jsTree",
-        "HTML",
-        "CSS",
-        "REST APIs",
-        "AJAX",
+        "NestJS",
+        "Prisma",
+        "PostgreSQL",
+        "Redis",
+        "Socket.IO",
+        "React",
+        "Vite",
+        "React Native",
+        "Expo",
+        "TypeScript",
+        "TanStack Query",
+        "Zustand",
+        "Zod",
+        "Jest",
+        "Vitest",
+        "GitHub Actions",
       ],
       outcome:
-        "Improved admin task efficiency by 35% and cut UI refresh cycles by 40%, with changes persisting immediately between frontend state and the backend store.",
-      links: [],
+        "Backend covered by 18 Jest unit tests (pricing, geo distance, delivery availability, auth lifecycle incl. refresh-token rotation) plus a clean tsc/eslint build; web covered by 10 Vitest tests plus a clean production build; mobile typechecks and lints with zero errors and zero any usage.\n\nThe full end-to-end demo flow - register → search → cart → checkout → live order tracking - was verified by hand in a real browser session.",
+      links: [
+        {
+          label: "Demo",
+          url: "https://drive.google.com/file/d/1wOb5l8qR8Py-DGNu930T02ylKOuXyFWq/view?usp=sharing",
+        },
+      ],
     },
 
     project3: {
-      kind: "project",
-      eyebrow: "MOBILE UI CONCEPT",
-      title: "Zipp - Quick-Commerce Delivery App",
-      timeframe: "Personal project",
-      overview:
-        "A concept quick-commerce app in the spirit of Blinkit and Zomato - built to explore the interaction patterns that define fast, high-frequency mobile shopping: live order tracking, instant cart feedback, and near-zero checkout friction.",
-      problem:
-        "How might a quick-commerce app reduce decision fatigue and checkout friction for users who are ordering in a hurry, often on the go?",
-      solution:
-        "Designed a modular component system in Figma - skeleton loaders, a persistent floating cart, gesture-based quantity controls, and a live order-tracking map - then built it as a working React Native prototype with smooth, physics-based micro-interactions.",
-      contribution:
-        "End-to-end concept, UI/UX design in Figma, and the React Native implementation.",
-      tech: [
-        "React Native",
-        "TypeScript",
-        "Figma",
-        "React Native Reanimated",
-        "REST + WebSocket (live tracking)",
+      kind: "uxgallery",
+      eyebrow: "UI/UX PROJECTS",
+      title: "UI/UX Projects",
+      caseStudies: [
+        {
+          title: "I'm Beside You - Website UX Optimization",
+          blurb:
+            "Redesigned a corporate website to make its vision and product easier to understand, based on usability research with real testers. Owned research, wireframing, interface design, and development.",
+          link: "https://medhascollege.wixsite.com/website/i-m-beside-you?rc=test-site",
+        },
+        {
+          title: "Messin - Reducing Food Wastage at IIT Patna",
+          blurb:
+            "A conceptual mobile app tackling mess food wastage on campus - from empathy research with mess staff and students through to wireframes, visual design, and a working prototype.",
+          link: "https://medhascollege.wixsite.com/website/messin?rc=test-site",
+        },
       ],
-      outcome:
-        "A fully clickable prototype demonstrating current mobile interaction patterns used at companies like Blinkit, Zomato, and Uber - skeleton loading states, live tracking, and gesture-driven cart management.",
-      note: "Concept project - built to demonstrate current mobile UI patterns in demand at quick-commerce companies.",
-      links: [],
     },
 
     skills: {
@@ -195,28 +210,13 @@
 
     sidequests: {
       kind: "sidequests",
-      uxCaseStudies: [
-        {
-          title: "I'm Beside You - Website UX Optimization",
-          blurb:
-            "Redesigned a corporate website to make its vision and product easier to understand, based on usability research with real testers. Owned research, wireframing, interface design, and development.",
-          link: "https://medhascollege.wixsite.com/website/i-m-beside-you?rc=test-site",
-        },
-        {
-          title: "Messin - Reducing Food Wastage at IIT Patna",
-          blurb:
-            "A conceptual mobile app tackling mess food wastage on campus - from empathy research with mess staff and students through to wireframes, visual design, and a working prototype.",
-          link: "https://medhascollege.wixsite.com/website/messin?rc=test-site",
-        },
-      ],
       artReveriez: {
         desc: "Co-founded Art Reveriez, specializing in hand-painted customized polaroids, bookmarks, and clothing. Led creative direction of the brand identity and graphics, and ran stall operations - 55+ orders, 500+ customers engaged, ₹13K+ revenue in 3 days.",
-        instagram:
-          null /* TODO: add Instagram URL, e.g. "https://instagram.com/artreveriez" */,
+        instagram: "https://www.instagram.com/art.reveriez?igshid=MTRncGd3dHFvN25tOA==",
       },
       yearbook: {
         desc: "Lead Designer for the IIT Patna yearbook - directed a Netflix-inspired design with a 5-member team, covering flex banners, the photo booth, and table pieces, from concept through to print production. Worked directly with printing agencies to keep everything on schedule.",
-        drive: null /* TODO: add Google Drive link to yearbook glimpses */,
+        drive: "https://drive.google.com/drive/folders/1BWawbjtp0XvqIHyzzJ3xlI9t2hsLLUaq?usp=sharing",
       },
       ducks: {
         desc: "A daily ritual since January 6, 2026: I visit and photograph the same 4 ducks at a nearby pond. One of them had 5 ducklings - I've documented their whole journey. Only 2 made it to their gawky teenage phase alongside the original 4. The local caretaker (who I can't fully understand - he speaks Telugu) says the rest were lost to overheating, a snake, and - reportedly - a rabbit, which still doesn't seem physically possible.",
@@ -376,9 +376,15 @@
               );
             })
             .join("")
-        : '<p class="placeholder">Internal enterprise project — source code and live demo are confidential.</p>';
+        : '<p class="placeholder">' +
+          esc(
+            d.noLinksNote ||
+              "Internal enterprise project — source code and live demo are confidential."
+          ) +
+          "</p>";
 
     var solutionWide = typeof d.solution === "object" ? " card--wide" : "";
+    var contributionWide = d.contributionWide ? " card--wide" : "";
 
     return (
       '<article class="page page--project">' +
@@ -387,6 +393,7 @@
       '<p class="page__timeframe">' +
       esc(d.timeframe) +
       "</p>" +
+      (d.note ? '<p class="project-note">' + esc(d.note) + "</p>" : "") +
       '<div class="page__grid">' +
       '<section class="card"><h3>Overview</h3>' +
       paragraphs(d.overview) +
@@ -399,7 +406,9 @@
       '"><h3>Solution</h3>' +
       solutionHtml(d.solution) +
       "</section>" +
-      '<section class="card"><h3>My Contribution</h3>' +
+      '<section class="card' +
+      contributionWide +
+      '"><h3>My Contribution</h3>' +
       paragraphs(d.contribution) +
       "</section>" +
       '<section class="card card--wide"><h3>Technologies / Tools</h3>' +
@@ -498,24 +507,6 @@
   }
 
   function renderSideQuests(d) {
-    var uxCards = d.uxCaseStudies
-      .map(function (c) {
-        return (
-          '<section class="card case-study-card">' +
-          "<h3>" +
-          esc(c.title) +
-          "</h3>" +
-          '<p class="placeholder">' +
-          esc(c.blurb) +
-          "</p>" +
-          '<a class="ext-link-btn" href="' +
-          esc(c.link) +
-          '" target="_blank" rel="noopener">View Case Study ↗</a>' +
-          "</section>"
-        );
-      })
-      .join("");
-
     var igLink = d.artReveriez.instagram
       ? '<a class="ext-link-btn" href="' +
         esc(d.artReveriez.instagram) +
@@ -538,9 +529,6 @@
       '<article class="page page--sidequests">' +
       backBtn() +
       pageHead("FOLDER", "Side Quests") +
-      '<div class="page__grid page__grid--quests-wide">' +
-      uxCards +
-      "</div>" +
       '<div class="page__grid" style="margin-top:18px;">' +
       '<section class="card"><h3>Art Reveriez</h3><p class="placeholder">' +
       esc(d.artReveriez.desc) +
@@ -562,11 +550,41 @@
     );
   }
 
+  function renderUxGallery(d) {
+    var cards = d.caseStudies
+      .map(function (c) {
+        return (
+          '<section class="card case-study-card">' +
+          "<h3>" +
+          esc(c.title) +
+          "</h3>" +
+          '<p class="placeholder">' +
+          esc(c.blurb) +
+          "</p>" +
+          '<a class="ext-link-btn" href="' +
+          esc(c.link) +
+          '" target="_blank" rel="noopener">View Case Study ↗</a>' +
+          "</section>"
+        );
+      })
+      .join("");
+
+    return (
+      '<article class="page page--sidequests">' +
+      backBtn() +
+      pageHead(d.eyebrow, d.title) +
+      '<div class="page__grid page__grid--quests-wide">' +
+      cards +
+      "</div></article>"
+    );
+  }
+
   var RENDERERS = {
     project: renderProject,
     skills: renderSkills,
     experience: renderExperience,
     sidequests: renderSideQuests,
+    uxgallery: renderUxGallery,
   };
 
   /* ----------------------------------------------------------
