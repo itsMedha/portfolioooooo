@@ -639,3 +639,33 @@ a, button {
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
   .duck-card__body { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   FULL-PAGE PROJECT VIEW (no popup frame) + FLOW GRAPHIC
+   ============================================================ */
+.fullpage {
+  min-height: 100%;
+  background: var(--titlebar-bg);
+  padding: clamp(18px, 4vh, 48px) clamp(14px, 5vw, 72px) clamp(28px, 6vh, 72px);
+}
+.fullpage .page { max-width: 1240px; }
+
+.flow-figure {
+  margin: 0 0 18px;
+  background: #f5f2ea;
+  border: 1.5px solid var(--card-border);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(20, 20, 30, 0.06);
+  overflow-x: auto;
+}
+.flow-figure__link { display: block; }
+.flow-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Phones: keep the diagram legible and let it scroll sideways */
+@media (max-width: 720px) {
+  .flow-figure img { width: 760px; max-width: none; }
+}
