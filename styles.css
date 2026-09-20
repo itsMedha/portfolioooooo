@@ -692,7 +692,8 @@ a, button {
    PHONE-SCREEN FLOW GRAPHIC (BookRush)
    Same cream / ink / teal / red palette as the Project1 diagram.
    ============================================================ */
-.shots {
+.shots,
+.panels {
   --shots-bg: #f5f2ea;
   --shots-ink: #1f2421;
   --shots-muted: #6a6e66;
@@ -861,4 +862,115 @@ a, button {
   margin-right: 8px;
   border-radius: 50%;
   background: var(--shots-teal);
+}
+
+/* ============================================================
+   BEFORE / AFTER PANELS (User Sync)
+   Reuses the .shots figure frame, heading and stat band.
+   ============================================================ */
+.panels__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  margin-bottom: 34px;
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+}
+.panel + .panel {
+  padding-left: 30px;
+  border-left: 1.5px solid rgba(20, 23, 26, 0.12);
+}
+.panel__label {
+  margin: 0 0 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.panel--problem .panel__label { color: var(--shots-red); }
+.panel--fix .panel__label { color: var(--shots-teal); }
+
+.panel__heading {
+  font-family: var(--font-body);
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0 0 20px;
+  color: var(--shots-ink);
+}
+
+/* agent lanes: laid end to end when sequential, stacked when parallel */
+.viz { margin: 0 0 24px; }
+.viz__track {
+  display: flex;
+  gap: 6px;
+}
+.viz--parallel .viz__track {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.viz__bar {
+  display: grid;
+  place-items: center;
+  height: 34px;
+  padding: 0 10px;
+  border: 1.5px solid currentColor;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.viz--sequence .viz__bar { flex: 1; }
+.viz--parallel .viz__bar { width: 46%; }
+.panel--problem .viz__bar {
+  color: var(--shots-red);
+  background: rgba(192, 57, 43, 0.08);
+}
+.panel--fix .viz__bar {
+  color: var(--shots-teal);
+  background: rgba(43, 90, 85, 0.1);
+}
+.viz__axis {
+  margin: 10px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--shots-muted);
+}
+
+.panel__notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+.panel__note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--shots-muted);
+}
+.panel__note strong {
+  font-size: 13.5px;
+  color: var(--shots-ink);
+}
+.panel__note strong::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+}
+.panel--problem .panel__note strong::before { background: var(--shots-red); }
+.panel--fix .panel__note strong::before { background: var(--shots-teal); }
+
+/* the before/after band carries a wider stat, so its points wrap 2x2 */
+.panels .shots__points {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 26px;
 }

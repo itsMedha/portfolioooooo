@@ -177,23 +177,131 @@
     },
 
     project3: {
-      kind: "uxgallery",
-      eyebrow: "UI/UX PROJECTS",
-      title: "UI/UX Projects",
-      caseStudies: [
-        {
-          title: "I'm Beside You - Website UX Optimization",
-          blurb:
-            "Redesigned a corporate website to make its vision and product easier to understand, based on usability research with real testers. Owned research, wireframing, interface design, and development.",
-          link: "https://medhascollege.wixsite.com/website/i-m-beside-you?rc=test-site",
+      kind: "project",
+      fullPage: true,
+      flowPanels: {
+        title: "One agent at a time.",
+        titleRest: "Then: three lanes, flat memory.",
+        intro:
+          "The sync held up for small tenants and crawled at six figures. Same pipeline, reordered so runtime stops being the sum of its parts and memory stops tracking tenant size.",
+        panels: [
+          {
+            tone: "problem",
+            label: "Before",
+            heading: "Sequential sync",
+            viz: "sequence",
+            bars: ["Agent 1", "Agent 2", "Agent 3"],
+            axis: "runtime = every agent, added up",
+            notes: [
+              {
+                title: "One agent at a time",
+                text: "Mail server agents were processed strictly in sequence, so total runtime was the sum of every agent's runtime.",
+              },
+              {
+                title: "Whole tenant in memory",
+                text: "The fetch returned a fully materialized List<User>, so every user object was held before processing began and memory grew with tenant size.",
+              },
+              {
+                title: "100 per page, logged per user",
+                text: "Directory pages came back at the API default of 100, while a full attribute map was written for every single user at production log level.",
+              },
+            ],
+          },
+          {
+            tone: "fix",
+            label: "After",
+            heading: "Bounded parallelism",
+            viz: "parallel",
+            bars: ["Agent 1", "Agent 2", "Agent 3"],
+            axis: "3-thread pool - runtime = the slowest lane",
+            notes: [
+              {
+                title: "Three lanes, deliberately",
+                text: "Agent tasks run through a thread pool capped at 3. Each task is a remote call plus database work, so the limit is the DB and the network, not CPU - a larger pool would move the bottleneck onto shared infrastructure.",
+              },
+              {
+                title: "Batched, then released",
+                text: "Users are pulled and processed in fixed-size batches, so peak memory is bounded by batch size instead of tenant size. An iterator-based API keeps any future caller from reintroducing the full-list load.",
+              },
+              {
+                title: "999 per page, dumps at DEBUG",
+                text: "Roughly an order of magnitude fewer round trips for a 100k-user tenant, and per-user output stops costing I/O on every sync.",
+              },
+              {
+                title: "Retries that end",
+                text: "A retry counter persisted per item lets the scheduler reprocess transient failures, and mark an item permanently failed once it passes the threshold.",
+              },
+            ],
+          },
+        ],
+        band: {
+          statValue: "~50%",
+          statTitle: "Fewer sync bottlenecks",
+          statText: "logging changes alone: 10-15%",
+          points: [
+            {
+              title: "Parallel, capped",
+              text: "Three agent lanes, sized to the DB and network.",
+            },
+            {
+              title: "Flat memory",
+              text: "Peak follows batch size, not tenant size.",
+            },
+            {
+              title: "~10x fewer calls",
+              text: "Directory page size raised from 100 to 999.",
+            },
+            {
+              title: "Self-healing",
+              text: "Transient faults retry; permanent ones stop.",
+            },
+          ],
         },
-        {
-          title: "Messin - Reducing Food Wastage at IIT Patna",
-          blurb:
-            "A conceptual mobile app tackling mess food wastage on campus - from empathy research with mess staff and students through to wireframes, visual design, and a working prototype.",
-          link: "https://medhascollege.wixsite.com/website/messin?rc=test-site",
-        },
+      },
+      eyebrow: "BACKEND · PERFORMANCE",
+      title: "User Sync — Scaling Enterprise Directory Sync to 100k+ Users",
+      timeframe: "2024–2025 · ZL Technologies",
+      overview:
+        "A backend service that syncs enterprise users from external directory providers - Microsoft 365 and Google Directory - into an enterprise data management platform. Discovery data is written to a temporary index, compared against the existing index, and the resulting changes are written to the database.\n\nI worked on making it hold up for customers with six-figure user counts.",
+      problem: {
+        intro:
+          "The sync worked fine for small tenants and slowed to a crawl at enterprise scale. For customers with 100k+ users, three things were working against it:",
+        bullets: [
+          "Mail server agents were processed strictly one at a time, so total runtime was the sum of every agent's runtime.",
+          "The fetch method returned a fully materialized List<User>. Every user object for the entire tenant was held in memory before processing began, so memory grew with tenant size instead of staying flat.",
+          "Directory pages came back 100 users at a time (the API default), and per-user debug output - including a full attribute map printed for every single user - was being written at production log level.",
+        ],
+      },
+      solution: {
+        intro:
+          "Traced the sync end to end, then fixed the bottlenecks in the order they had to land.",
+        bullets: [
+          "Parallel agent processing. Wrapped each mail server agent task in a Runnable, collected them into a task list, and executed them through a thread pool manager rather than sequentially.",
+          "The trade-off: the pool is capped at 3 threads, not scaled up. Each task does both a remote directory call and database work, so the limiting resource is the DB and the network, not CPU. A larger pool would have shifted the bottleneck onto shared infrastructure that other tenants depend on, trading a faster sync for a less stable platform. Three gave a meaningful speedup with predictable load.",
+          "Lazy, batched processing instead of global accumulation. The full-list fetch was survivable while the sync ran sequentially, but parallelising made it acute: three concurrent agents each accumulating a tenant's worth of users exhausted the heap, and I hit an OutOfMemoryError in testing. So the memory fix had to land before the speedup could ship.",
+          "The real fix wasn't the iterator - it was removing the accumulation. Users are now pulled and processed in fixed-size batches and released, so peak memory is bounded by batch size instead of tenant size. An iterator-based design enforces that laziness at the API level, so no future caller can accidentally reintroduce the full-list load.",
+          "Fewer network round trips. Raised the directory page size from the default 100 to 999, cutting round trips for a 100k-user tenant by roughly an order of magnitude.",
+          "Cheaper logging. Moved per-user attribute dumps and per-call trace lines down to DEBUG. The information is still there when someone needs to turn it on; it just stops costing I/O on every user of every sync.",
+          "Bounded retries. Transient failures - network timeouts, dropped DB connections, staging errors - no longer kill an item permanently. Each item carries a retry counter persisted in the database; the scheduler reprocesses anything below the threshold and marks items permanently failed once they exceed it. Automatic recovery from transient faults, with no infinite retry loop.",
+        ],
+      },
+      contribution:
+        "Owned the performance and reliability work end to end: traced the existing sync through its logs and code to find where time and memory were actually going, then designed and implemented the parallel execution path, the batched fetch redesign, pagination tuning, and the retry mechanism.\n\nMost of the work was reading legacy code - following how a single button click in the UI fans out into a multi-stage backend process, and understanding the design patterns the codebase already used so the changes fit the existing architecture rather than fighting it.",
+      tech: [
+        "Java",
+        "Multithreading",
+        "Thread Pools",
+        "Microsoft Graph API",
+        "Google Directory",
+        "Batch Processing",
+        "Retry & Scheduling",
+        "SQL",
       ],
+      outcome:
+        "Synchronization bottlenecks reduced by roughly 50%, with the logging changes alone accounting for 10-15%.\n\nPeak memory is now a function of batch size rather than tenant size, so the sync scales to large tenants without heap pressure. Transient failures recover on their own instead of permanently failing an item.",
+      noLinksNote:
+        "Internal enterprise project — source code and demo are confidential.",
+      links: [],
     },
 
     skills: {
@@ -294,6 +402,20 @@
 
     sidequests: {
       kind: "sidequests",
+      uxCaseStudies: [
+        {
+          title: "I'm Beside You - Website UX Optimization",
+          blurb:
+            "Redesigned a corporate website to make its vision and product easier to understand, based on usability research with real testers. Owned research, wireframing, interface design, and development.",
+          link: "https://medhascollege.wixsite.com/website/i-m-beside-you?rc=test-site",
+        },
+        {
+          title: "Messin - Reducing Food Wastage at IIT Patna",
+          blurb:
+            "A conceptual mobile app tackling mess food wastage on campus - from empathy research with mess staff and students through to wireframes, visual design, and a working prototype.",
+          link: "https://medhascollege.wixsite.com/website/messin?rc=test-site",
+        },
+      ],
       artReveriez: {
         desc: "Co-founded Art Reveriez, specializing in hand-painted customized polaroids, bookmarks, and clothing. Led creative direction of the brand identity and graphics, and ran stall operations - 55+ orders, 500+ customers engaged, ₹13K+ revenue in 3 days.",
         instagram: "https://www.instagram.com/art.reveriez?igshid=MTRncGd3dHFvN25tOA==",
@@ -423,9 +545,10 @@
       "</ul>"
     );
   }
-  function solutionHtml(solution) {
-    if (typeof solution === "string") return paragraphs(solution);
-    return paragraphs(solution.intro) + bulletList(solution.bullets);
+  /* Either a plain string, or { intro, bullets } */
+  function richText(value) {
+    if (typeof value === "string") return paragraphs(value);
+    return paragraphs(value.intro) + bulletList(value.bullets);
   }
   function backBtn() {
     return '<button class="back-btn" data-back><span class="back-btn__icon">←</span> back to desktop</button>';
@@ -440,6 +563,101 @@
       esc(title) +
       "</h2></div>" +
       "</div>"
+    );
+  }
+
+  /* Headline figure shared by the lead graphics: one big number + points */
+  function renderBand(b) {
+    var points = b.points
+      .map(function (p) {
+        return (
+          '<li class="shots__point"><strong>' +
+          esc(p.title) +
+          "</strong><span>" +
+          esc(p.text) +
+          "</span></li>"
+        );
+      })
+      .join("");
+
+    return (
+      '<div class="shots__band">' +
+      '<div class="shots__stat"><span class="shots__stat-value">' +
+      esc(b.statValue) +
+      '</span><span class="shots__stat-text"><strong>' +
+      esc(b.statTitle) +
+      "</strong>" +
+      esc(b.statText) +
+      "</span></div>" +
+      '<ul class="shots__points">' +
+      points +
+      "</ul></div>"
+    );
+  }
+
+  /* Before/after panels used as a project's lead graphic */
+  function renderPanels(f) {
+    var panels = f.panels
+      .map(function (p) {
+        var bars = p.bars
+          .map(function (label) {
+            return '<span class="viz__bar">' + esc(label) + "</span>";
+          })
+          .join("");
+
+        var notes = p.notes
+          .map(function (n) {
+            return (
+              '<li class="panel__note"><strong>' +
+              esc(n.title) +
+              "</strong><span>" +
+              esc(n.text) +
+              "</span></li>"
+            );
+          })
+          .join("");
+
+        return (
+          '<section class="panel panel--' +
+          esc(p.tone) +
+          '">' +
+          '<p class="panel__label">' +
+          esc(p.label) +
+          "</p>" +
+          '<h4 class="panel__heading">' +
+          esc(p.heading) +
+          "</h4>" +
+          '<div class="viz viz--' +
+          esc(p.viz) +
+          '"><div class="viz__track">' +
+          bars +
+          '</div><p class="viz__axis">' +
+          esc(p.axis) +
+          "</p></div>" +
+          '<ul class="panel__notes">' +
+          notes +
+          "</ul></section>"
+        );
+      })
+      .join("");
+
+    return (
+      '<figure class="shots panels" aria-label="' +
+      esc(f.title + " " + f.titleRest) +
+      '"><div class="shots__canvas">' +
+      '<h3 class="shots__title"><strong>' +
+      esc(f.title) +
+      "</strong> " +
+      esc(f.titleRest) +
+      "</h3>" +
+      '<p class="shots__intro">' +
+      esc(f.intro) +
+      "</p>" +
+      '<div class="panels__grid">' +
+      panels +
+      "</div>" +
+      renderBand(f.band) +
+      "</div></figure>"
     );
   }
 
@@ -480,19 +698,6 @@
       })
       .join("");
 
-    var b = f.band;
-    var points = b.points
-      .map(function (p) {
-        return (
-          '<li class="shots__point"><strong>' +
-          esc(p.title) +
-          "</strong><span>" +
-          esc(p.text) +
-          "</span></li>"
-        );
-      })
-      .join("");
-
     return (
       '<figure class="shots" aria-label="' +
       esc(f.title + " " + f.titleRest) +
@@ -506,17 +711,8 @@
       esc(f.intro) +
       "</p>" +
       rows +
-      '<div class="shots__band">' +
-      '<div class="shots__stat"><span class="shots__stat-value">' +
-      esc(b.statValue) +
-      '</span><span class="shots__stat-text"><strong>' +
-      esc(b.statTitle) +
-      "</strong>" +
-      esc(b.statText) +
-      "</span></div>" +
-      '<ul class="shots__points">' +
-      points +
-      "</ul></div></div></figure>"
+      renderBand(f.band) +
+      "</div></figure>"
     );
   }
 
@@ -549,6 +745,8 @@
 
     var flowHtml = d.flowShots
       ? renderShots(d.flowShots)
+      : d.flowPanels
+      ? renderPanels(d.flowPanels)
       : d.flowImage
       ? '<figure class="flow-figure">' +
         '<a class="flow-figure__link" href="' +
@@ -568,13 +766,13 @@
         "</section>",
       problem:
         '<section class="card"><h3>Problem</h3>' +
-        paragraphs(d.problem) +
+        richText(d.problem) +
         "</section>",
       solution:
         '<section class="card' +
         solutionWide +
         '"><h3>Solution</h3>' +
-        solutionHtml(d.solution) +
+        richText(d.solution) +
         "</section>",
       contribution:
         '<section class="card' +
@@ -598,7 +796,7 @@
 
     /* Projects with a flow graphic lead with it, then Technologies, then the
        usual cards; every other project keeps the original order. */
-    var order = d.flowImage || d.flowShots
+    var order = flowHtml
       ? ["tech", "overview", "problem", "solution", "contribution", "outcome", "links"]
       : ["overview", "problem", "solution", "contribution", "tech", "outcome", "links"];
 
@@ -704,6 +902,8 @@
   }
 
   function renderSideQuests(d) {
+    var uxCards = d.uxCaseStudies.map(caseStudyCard).join("");
+
     var igLink = d.artReveriez.instagram
       ? '<a class="ext-link-btn" href="' +
         esc(d.artReveriez.instagram) +
@@ -726,6 +926,9 @@
       '<article class="page page--sidequests">' +
       backBtn() +
       pageHead("FOLDER", "Side Quests") +
+      '<div class="page__grid page__grid--quests-wide">' +
+      uxCards +
+      "</div>" +
       '<div class="page__grid" style="margin-top:18px;">' +
       '<section class="card"><h3>Art Reveriez</h3><p class="placeholder">' +
       esc(d.artReveriez.desc) +
@@ -747,32 +950,20 @@
     );
   }
 
-  function renderUxGallery(d) {
-    var cards = d.caseStudies
-      .map(function (c) {
-        return (
-          '<section class="card case-study-card">' +
-          "<h3>" +
-          esc(c.title) +
-          "</h3>" +
-          '<p class="placeholder">' +
-          esc(c.blurb) +
-          "</p>" +
-          '<a class="ext-link-btn" href="' +
-          esc(c.link) +
-          '" target="_blank" rel="noopener">View Case Study ↗</a>' +
-          "</section>"
-        );
-      })
-      .join("");
-
+  /* One UI/UX case study, shown inside Side Quests */
+  function caseStudyCard(c) {
     return (
-      '<article class="page page--sidequests">' +
-      backBtn() +
-      pageHead(d.eyebrow, d.title) +
-      '<div class="page__grid page__grid--quests-wide">' +
-      cards +
-      "</div></article>"
+      '<section class="card case-study-card">' +
+      "<h3>" +
+      esc(c.title) +
+      "</h3>" +
+      '<p class="placeholder">' +
+      esc(c.blurb) +
+      "</p>" +
+      '<a class="ext-link-btn" href="' +
+      esc(c.link) +
+      '" target="_blank" rel="noopener">View Case Study ↗</a>' +
+      "</section>"
     );
   }
 
@@ -781,7 +972,6 @@
     skills: renderSkills,
     experience: renderExperience,
     sidequests: renderSideQuests,
-    uxgallery: renderUxGallery,
   };
 
   /* ----------------------------------------------------------
