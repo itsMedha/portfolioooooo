@@ -47,52 +47,131 @@
 
     project2: {
       kind: "project",
-      eyebrow: "FULL-STACK MONOREPO",
-      title: "BookRush - Book Discovery, Delivery & Reader Community Platform",
+      fullPage: true,
+      flowShots: {
+        title: "Find it.",
+        titleRest: "Get it fast. Follow the order.",
+        intro:
+          "From a search to a doorstep: every screen shows how fast a book can arrive, and the community feeds straight back into buying.",
+        rows: [
+          {
+            label: "Discover & choose",
+            shots: [
+              {
+                src: "assets/bookrush/home.webp",
+                label: "Home",
+                note: "Instant-delivery banner, categories and books in stock near you.",
+              },
+              {
+                src: "assets/bookrush/discover.webp",
+                label: "Discover",
+                note: "Search, quick filters, recent and trending searches.",
+              },
+              {
+                src: "assets/bookrush/book-detail.webp",
+                label: "Book details",
+                note: "Buy or rent, with the delivery ETA shown up front.",
+              },
+              {
+                src: "assets/bookrush/cart.webp",
+                label: "Cart",
+                note: "Grouped by delivery speed, with buy/rent switching.",
+              },
+            ],
+          },
+          {
+            label: "Order, track & connect",
+            shots: [
+              {
+                src: "assets/bookrush/checkout.webp",
+                label: "Checkout",
+                note: "Address, delivery option and payment in one screen.",
+              },
+              {
+                src: "assets/bookrush/tracking.webp",
+                label: "Order tracking",
+                note: "Live six-stage timeline with a running ETA.",
+              },
+              {
+                src: "assets/bookrush/community.webp",
+                label: "Community",
+                note: "For You, Following and Trending feeds, plus book clubs.",
+              },
+              {
+                src: "assets/bookrush/profile.webp",
+                label: "Profile",
+                note: "Followers, saved books, reviews, posts and clubs.",
+              },
+            ],
+          },
+        ],
+        band: {
+          statValue: "66",
+          statTitle: "Tests, green CI",
+          statText: "lint · typecheck · tests · iOS bundle",
+          points: [
+            {
+              title: "Delivery-aware",
+              text: "Instant, standard or unavailable on every book.",
+            },
+            {
+              title: "Buy or rent",
+              text: "30-day rentals, set per title.",
+            },
+            {
+              title: "Smart cart",
+              text: "Split by delivery speed; instant only if every item qualifies.",
+            },
+            {
+              title: "Live tracking",
+              text: "A six-stage order timeline that keeps moving.",
+            },
+          ],
+        },
+      },
+      eyebrow: "MOBILE APP",
+      title: "BookRush - Quick-Commerce Book Discovery & Delivery App",
       timeframe: "2026 · Personal project",
       overview:
-        "A book discovery, quick-commerce delivery, and reader-community platform built as a production-shaped monorepo: a NestJS + Prisma API, a Vite/React web app, and a React Native/Expo mobile app, all sharing one real-time order-tracking architecture and one set of domain types.\n\nThe core loop is Discover → Read → Connect: find a book through search or personalized recommendations, get it delivered instantly from a nearby fulfillment center (or via standard shipping), then discuss it with other readers through posts, reviews, and book clubs.",
+        "BookRush is a quick-commerce app for books, built with React Native, Expo and TypeScript. Find a book, see whether a store near you has it, buy it or rent it for 30 days, and get it delivered - instantly if it is stocked nearby, or on standard shipping if it is not.\n\nA reader community of posts, likes, comments and book clubs sits alongside the shopping flow. Posts reference books that link straight into the same detail screen search would reach, so the community feeds the core buying loop.",
       problem:
-        "The goal was to build something that feels like an actual consumer app for book lovers - editorial, warm, commerce-capable - rather than a generated CRUD demo, while keeping three separate clients (web, mobile, and future integrations) consistent against one backend.\n\nThat meant getting commerce logic (pricing, delivery eligibility, stock) fully server-authoritative, keeping order status genuinely real-time across clients, and sharing domain types and validation rules across the whole monorepo instead of duplicating them per app.",
+        "Delivery speed is what makes quick commerce work, yet it is often only clear at checkout. I wanted BookRush to answer one question from the first search result: can I have this book now, and how fast?\n\nThat meant making delivery availability part of every book on every screen, letting one basket mix instant and standard items without confusing the buyer, and supporting buy-or-rent - all without a backend, while keeping loading, empty and error states real and reachable.",
       solution: {
         intro:
-          "Structured the codebase as an npm workspaces monorepo with shared packages for domain types and zod validation, then built the backend and both clients on top of that shared contract.",
+          "Built the app as layered, testable frontend code, with an API-shaped mock service layer standing in for a backend.",
         bullets: [
-          "Built the NestJS + Prisma API with feature modules (auth, books, cart, orders, realtime, community, clubs) so pricing, delivery eligibility, and stock decrements all live in unit-tested backend services - never trusted from the client.",
-          "Implemented a quick-commerce delivery simulator: real inventory-per-fulfillment-center data plus haversine distance decides INSTANT vs. STANDARD vs. UNAVAILABLE per book, per location.",
-          "Added live order tracking over a Socket.IO /orders namespace, with an in-process simulator pushing an order through CONFIRMED → PREPARING → PACKED → PICKED UP → OUT FOR DELIVERY → DELIVERED to subscribed clients.",
-          "Implemented JWT auth with access/refresh rotation and argon2 password hashing, shared identically across the web and mobile clients.",
-          "Built the community layer (posts, likes, comments, follows, For You/Following/Trending feeds) and book clubs (join/leave, current book, discussions) on the same API.",
-          "Used TanStack Query + Zustand on both web and mobile for server/client state, with FlashList and MMKV on the mobile side for large lists and fast persisted storage.",
+          "Modelled delivery as a tagged union (INSTANT with an ETA, STANDARD, UNAVAILABLE) on every book, so one DeliveryAvailability component renders the same badge on cards, search results, book details and the cart - and the unavailable case cannot be forgotten.",
+          "Built buy-or-rent into the cart line and grouped the cart by delivery speed: checkout offers instant delivery only when every item qualifies, quoted from the slowest item plus a picking buffer.",
+          "Split state by who owns it: Zustand for the cart, session and likes (persisted with AsyncStorage), TanStack Query for anything server-shaped (books, feed, orders), and local state for UI-only concerns.",
+          "Simulated order tracking as a six-stage state machine (CONFIRMED to DELIVERED) inside the order service, so progress continues while you are on another screen; the tracking screen polls every 2.5 seconds, the way it would against a real endpoint.",
+          "Made the mock service layer behave like a network - latency, typed errors, and a Settings switch that forces failures - and routed every data-driven section through one AsyncBoundary, so loading, empty and error states are all reachable.",
+          "Created a design-token UI kit (Text, Button, BottomSheet, Chip, Skeleton and more), a custom animated tab bar, and Reanimated micro-interactions that run on the UI thread.",
         ],
       },
       contribution:
-        "Designed and built the project end-to-end across all three apps: the NestJS/Prisma backend, the Vite/React web client, and the React Native/Expo mobile client, plus the shared-types and validation packages that keep them in sync.\n\nWrote the backend unit tests (pricing, geo distance, delivery availability, full auth lifecycle) and set up per-app, path-filtered CI on GitHub Actions.",
+        "Designed and built the app end to end: the product flows, the design tokens and UI kit, every screen (home, discover, book details, cart, checkout, order tracking, community, clubs and profile), the state architecture and the mock service layer.\n\nWrote the frontend system-design document covering layering, state ownership, data flow and trade-offs, along with 66 tests focused on logic that is easy to get wrong and expensive to notice - pricing, delivery eligibility, stock limits and the order state machine - plus the flows a user would actually hit.",
       contributionWide: true,
       tech: [
-        "NestJS",
-        "Prisma",
-        "PostgreSQL",
-        "Redis",
-        "Socket.IO",
-        "React",
-        "Vite",
         "React Native",
         "Expo",
+        "Expo Router",
         "TypeScript",
-        "TanStack Query",
         "Zustand",
+        "TanStack Query",
+        "React Native Reanimated",
+        "React Hook Form",
         "Zod",
+        "AsyncStorage",
         "Jest",
-        "Vitest",
+        "React Native Testing Library",
         "GitHub Actions",
       ],
       outcome:
-        "Backend covered by 18 Jest unit tests (pricing, geo distance, delivery availability, auth lifecycle incl. refresh-token rotation) plus a clean tsc/eslint build; web covered by 10 Vitest tests plus a clean production build; mobile typechecks and lints with zero errors and zero any usage.\n\nThe full end-to-end demo flow - register → search → cart → checkout → live order tracking - was verified by hand in a real browser session.",
+        "A complete, runnable app covering the whole loop: browse and search, delivery-aware book details, buy or rent, a mixed-speed cart, checkout, live order tracking, order history with one-tap reorder, and a reader community with book clubs - running on iOS, Android and the web through Expo.\n\nBacked by 66 tests across pricing, delivery eligibility, the cart store, services and the order clock, plus key components and flows, and a CI pipeline that runs lint, typecheck, tests and an iOS bundle on every push and pull request.",
       links: [
         {
-          label: "Demo",
-          url: "https://drive.google.com/file/d/1wOb5l8qR8Py-DGNu930T02ylKOuXyFWq/view?usp=sharing",
+          label: "Demo Video",
+          url: "https://drive.google.com/file/d/1su515UAKEqHjjVXR-JU-542hb5B55prm/view?usp=sharing",
         },
       ],
     },
@@ -364,6 +443,83 @@
     );
   }
 
+  /* Numbered phone-screen flow used as a project's lead graphic */
+  function renderShots(f) {
+    var n = 0;
+    var rows = f.rows
+      .map(function (row) {
+        var shots = row.shots
+          .map(function (sh) {
+            n += 1;
+            return (
+              '<figure class="shot">' +
+              '<span class="shot__step">' +
+              n +
+              "</span>" +
+              '<div class="shot__frame"><img src="' +
+              esc(sh.src) +
+              '" alt="' +
+              esc("BookRush " + sh.label + " screen") +
+              '" loading="lazy" /></div>' +
+              '<figcaption><span class="shot__title">' +
+              esc(sh.label) +
+              '</span><span class="shot__note">' +
+              esc(sh.note) +
+              "</span></figcaption></figure>"
+            );
+          })
+          .join("");
+        return (
+          '<p class="shots__row-label">' +
+          esc(row.label) +
+          "</p>" +
+          '<div class="shots__row">' +
+          shots +
+          "</div>"
+        );
+      })
+      .join("");
+
+    var b = f.band;
+    var points = b.points
+      .map(function (p) {
+        return (
+          '<li class="shots__point"><strong>' +
+          esc(p.title) +
+          "</strong><span>" +
+          esc(p.text) +
+          "</span></li>"
+        );
+      })
+      .join("");
+
+    return (
+      '<figure class="shots" aria-label="' +
+      esc(f.title + " " + f.titleRest) +
+      '"><div class="shots__canvas">' +
+      '<h3 class="shots__title"><strong>' +
+      esc(f.title) +
+      "</strong> " +
+      esc(f.titleRest) +
+      "</h3>" +
+      '<p class="shots__intro">' +
+      esc(f.intro) +
+      "</p>" +
+      rows +
+      '<div class="shots__band">' +
+      '<div class="shots__stat"><span class="shots__stat-value">' +
+      esc(b.statValue) +
+      '</span><span class="shots__stat-text"><strong>' +
+      esc(b.statTitle) +
+      "</strong>" +
+      esc(b.statText) +
+      "</span></div>" +
+      '<ul class="shots__points">' +
+      points +
+      "</ul></div></div></figure>"
+    );
+  }
+
   /* ----------------------------------------------------------
      PAGE RENDERERS
   ---------------------------------------------------------- */
@@ -391,7 +547,9 @@
     var solutionWide = typeof d.solution === "object" ? " card--wide" : "";
     var contributionWide = d.contributionWide ? " card--wide" : "";
 
-    var flowHtml = d.flowImage
+    var flowHtml = d.flowShots
+      ? renderShots(d.flowShots)
+      : d.flowImage
       ? '<figure class="flow-figure">' +
         '<a class="flow-figure__link" href="' +
         esc(d.flowImage.src) +
@@ -440,7 +598,7 @@
 
     /* Projects with a flow graphic lead with it, then Technologies, then the
        usual cards; every other project keeps the original order. */
-    var order = d.flowImage
+    var order = d.flowImage || d.flowShots
       ? ["tech", "overview", "problem", "solution", "contribution", "outcome", "links"]
       : ["overview", "problem", "solution", "contribution", "tech", "outcome", "links"];
 
